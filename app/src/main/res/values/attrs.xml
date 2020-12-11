@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="PieCharView">
+        <attr name="stillRadius" format="dimension" />
+        <attr name="roundWidth" format="dimension" />
+        <attr name="textOutColor" format="dimension" />
+        <attr name="textInColor" format="dimension" />
+        <attr name="textInSize" format="dimension" />
+        <attr name="textOutSize" format="dimension" />
+    </declare-styleable>
+
+</resources>
