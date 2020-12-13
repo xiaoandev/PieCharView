@@ -13,9 +13,9 @@ import android.text.Layout;
 import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Toast;
 
 import com.example.piecharview.R;
 import com.example.piecharview.bean.Pie;
@@ -23,18 +23,16 @@ import com.example.piecharview.bean.Pie;
 import java.util.ArrayList;
 import java.util.List;
 
-
 /**
- * 自定义View————绘制扇形，并区分点击区域
+ * 自定义View————绘制扇形，并区分点击区域，实现不同区域点击效果
  *
  * @author uidq2429
  * @since 2020.12.10
  */
 
 public class PieCharView extends View {
-    private int mWidth;
-    private int mHeight;
-    private List<PointF> textList;
+
+    private final static String TAG = "PieCharView";
 
     /**
      * 设置中心文字默认值
@@ -53,9 +51,31 @@ public class PieCharView extends View {
      */
     private final static int DEFAULT_TEXT_COLOR = Color.RED;
     /**
+     * 设置扇形区域的默认颜色
+     */
+    private final static int DEFAULT_MODE_COLOR = Color.GRAY;
+    /**
+     * 设置扇形区域点击后的默认颜色
+     */
+    private final static int DEFAULT_TOUCH_MODE_COLOR = Color.BLUE;
+    /**
+     * 设置默认间隔线颜色
+     */
+    private final static int DEFAULT_LINE_COLOR = Color.WHITE;
+
+    private final static int DEFAULT_LINE_WIDTH = 2;
+    /**
      * 设置字体默认大小
      */
     private final static int DEFAULT_TEXT_SIZE = 15;
+    /**
+     * 存储需要绘制的文字的位置信息
+     */
+    private List<PointF> textList;
+    /**
+     * 存储需要绘制的间隔线起点和终点的位置信息
+     */
+    private List<PointF[]> lineList;
     /**
      * 判断是否显示扇区文字信息
      */
@@ -64,6 +84,10 @@ public class PieCharView extends View {
      * 判断是否显示中心文字信息
      */
     private boolean isShowInText = true;
+    /**
+     * 判断是否显示扇形区域之间的间隔线
+     */
+    private boolean isShowIntervalLine = true;
     /**
      * 扇区文字大小
      */
@@ -101,16 +125,47 @@ public class PieCharView extends View {
      */
     private float offsetY;
     /**
+     * 当前区域
+     */
+    private int currentMode;
+    /**
      * 点击区域
      */
     private int touchMode;
+    /**
+     * 外圆中心圆点 X 坐标
+     */
     private float centerX;
+    /**
+     * 外圆中心圆点 Y 坐标
+     */
     private float centerY;
+    /**
+     * 文本中心位置半径
+     */
     private float textRadius;
+    /**
+     * 显示文本的角度，相对外圆中心点而言
+     */
     private float textAngle;
+    /**
+     * 设置未点击的扇形区域的颜色
+     */
+    private int unTouchModeColor;
+    /**
+     * 设置点击的扇形区域的颜色
+     */
+    private int touchModeColor;
+    /**
+     * 间隔线颜色
+     */
+    private int lineColor;
+    /**
+     * 间隔线宽度
+     */
+    private int lineWidth;
 
-
-    private Paint piePaint, txtPaint;
+    private Paint piePaint, linePaint;
     private RectF pieInRectF, pieOutRectF, pieInTouchRectF, pieOutTouchRectF;
     private List<Pie> mList;
     private int[] basePieColors = new int[]{Color.parseColor("#FDA890"), Color.parseColor("#ABD1FD")
@@ -141,47 +196,49 @@ public class PieCharView extends View {
             textOutColor = (int) typedArray.getDimension(R.styleable.PieCharView_textOutColor, DEFAULT_TEXT_COLOR);
             textInSize = (int) typedArray.getDimension(R.styleable.PieCharView_textInSize, DEFAULT_TEXT_SIZE);
             textInColor = (int) typedArray.getDimension(R.styleable.PieCharView_textInColor, DEFAULT_TEXT_COLOR);
+            lineColor = (int) typedArray.getDimension(R.styleable.PieCharView_lineColor, DEFAULT_LINE_COLOR);
+            lineWidth = (int) typedArray.getDimension(R.styleable.PieCharView_lineWidth, DEFAULT_LINE_WIDTH);
+            touchModeColor = (int) typedArray.getDimension(R.styleable.PieCharView_touchMode, DEFAULT_TOUCH_MODE_COLOR);
+            unTouchModeColor = (int) typedArray.getDimension(R.styleable.PieCharView_unTouchMode, DEFAULT_MODE_COLOR);
             typedArray.recycle(); //回收TypedArray
         }
     }
 
     private void init() {
-        piePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        this.piePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        this.linePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
-        txtPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        txtPaint.setStyle(Paint.Style.STROKE);
-        txtPaint.setTextAlign(Paint.Align.CENTER);
+        this.linePaint = new Paint();
+        this.linePaint.setAntiAlias(true);
+        this.linePaint.setDither(true);
+        this.linePaint.setStyle(Paint.Style.STROKE);
 
-        pieInRectF = new RectF();
-        pieOutRectF = new RectF();
-        pieOutTouchRectF = new RectF();
-        pieInTouchRectF = new RectF();
+        this.pieInRectF = new RectF();
+        this.pieOutRectF = new RectF();
+        this.pieOutTouchRectF = new RectF();
+        this.pieInTouchRectF = new RectF();
 
-        mList = new ArrayList<>();
-        textList = new ArrayList<>();
+        this.mList = new ArrayList<>();
+        this.textList = new ArrayList<>();
+        this.lineList = new ArrayList<>();
 
-        centerText = DEFAULT_CENTER_TEXT;
-        offsetX = 0;
-        offsetY = 0;
-        touchMode = 0;
+        this.centerText = DEFAULT_CENTER_TEXT;
+        this.offsetX = 0;
+        this.offsetY = 0;
+        this.currentMode = 0;
+        this.touchMode = 0;
     }
 
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-//        mWidth = w - getPaddingLeft() - getPaddingRight(); //外圆矩形实际宽度
-//        mHeight = h - getPaddingTop() - getPaddingBottom(); //外圆矩形实际高度
-
-        mWidth = w; //外圆矩形实际宽度
-        mHeight = h; //外圆矩形实际高度
-
-
+        //设置内圆外接矩形
         pieInRectF.left = roundWidth + offsetX;
         pieInRectF.top = roundWidth + offsetY;
         pieInRectF.right = roundWidth + 2 * stillRadius + offsetX;
         pieInRectF.bottom = roundWidth + 2 * stillRadius + offsetY;
 
-        //设置绘制外圆的矩形
+        //设置外圆外接矩形
         pieOutRectF.left = pieInRectF.left - roundWidth;
         pieOutRectF.top = pieInRectF.top - roundWidth;
         pieOutRectF.right = pieInRectF.right + roundWidth;
@@ -189,31 +246,20 @@ public class PieCharView extends View {
 
         centerX = pieOutRectF.centerX(); //外圆中心点 x 坐标
         centerY = pieOutRectF.centerY(); //外圆中心点 y 坐标
-//        textRadius = (float) (Math.min(centerX, centerY) * 0.4); // * 0.4 是为了避免绘制的文字超出边界
-        textRadius = stillRadius + roundWidth / 2;
+        textRadius = stillRadius + roundWidth / 2; //计算显示文字位置的半径
     }
-
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         textList.clear();
+        lineList.clear();
         textList = new ArrayList<>();
+        lineList = new ArrayList<>();
         if (mList != null) {
             drawPie(canvas); //绘制饼图
             drawText(canvas); //绘制文字
-
-//            Pie itemSelectMode;
-//            for (int i = 0; i < mList.size(); i++) {
-//                itemSelectMode = mList.get(i);
-//                //判断点击的坐标是否在环内
-//                if (itemSelectMode.isTouch()) {
-//                    Toast.makeText(getContext(), itemSelectMode.getContent(), Toast.LENGTH_SHORT).show(); //输出对应区域的Content
-//                    touchMode = i;
-//                    drawPie(canvas); //绘制饼图
-//                }
-//
-//            }
+            drawIntervalLine(canvas); //绘制间隔线
         }
     }
 
@@ -226,18 +272,51 @@ public class PieCharView extends View {
                 downY = event.getY();
                 break;
             case MotionEvent.ACTION_UP:
+                currentMode = 0;
                 for (Pie pie : mList) { //循环判断点击事件位置在哪个区域
                     pie.setTouch(false);
                     if (pie.isInRegion(downX, downY)) {
-                        pie.setTouch(!pie.isTouch());
-                        doOnSpecialTypeClick(event);
+                        pie.setTouch(true);
+                        touchMode = currentMode;
+                        Log.d(TAG, "Pie is " + pie.getContent());
+                        invalidate(); //请求重新draw
                     }
+                    currentMode += 1;
                 }
                 break;
         }
         return true;
     }
 
+    /**
+     * 绘制扇形区域之间的间隔线
+     * @param canvas
+     */
+    private void drawIntervalLine(Canvas canvas) {
+        if (isShowIntervalLine) {
+            float lineStartAngle = -90;
+            for (int i = 0; i < mList.size(); i++) {
+                //间隔线起点
+                PointF lineStartPoint = new PointF();
+                lineStartPoint.x = (float) (centerX + stillRadius * Math.cos(Math.toRadians(lineStartAngle)));
+                lineStartPoint.y = (float) (centerY + stillRadius * Math.sin(Math.toRadians(lineStartAngle)));
+                //间隔线终点
+                PointF lineStopPoint = new PointF();
+                lineStopPoint.x = (float) (centerX + (roundWidth + stillRadius)
+                                        * Math.cos(Math.toRadians(lineStartAngle)));
+                lineStopPoint.y = (float) (centerY + (roundWidth + stillRadius)
+                                        * Math.sin(Math.toRadians(lineStartAngle)));
+                lineList.add(new PointF[]{lineStartPoint, lineStopPoint});
+                lineStartAngle += mList.get(i).getPercent() / getSum() * 360f;
+            }
+            //循环绘制间隔线
+            linePaint.setStrokeWidth(lineWidth);
+            linePaint.setColor(lineColor);
+            for (PointF[] fp : lineList) {
+                canvas.drawLine(fp[0].x, fp[0].y, fp[1].x, fp[1].y, linePaint);
+            }
+        }
+    }
     /**
      * 绘制文字
      * @param canvas
@@ -247,7 +326,6 @@ public class PieCharView extends View {
         if (isShowOutText) {
             float textStartAngle = -90;
             for (int i = 0; i < mList.size(); i++) {
-
                 //文字位置角度 = 起始角度 + 扇形块角度/2
                 textAngle = textStartAngle + mList.get(i).getPercent() / getSum() * 360f / 2;
                 PointF pointF = new PointF();
@@ -288,7 +366,6 @@ public class PieCharView extends View {
         }
     }
 
-
     /**
      * 绘制饼图
      * @param canvas
@@ -313,9 +390,9 @@ public class PieCharView extends View {
             int sweepAngle = (int) (per / (float) getSum() * 360);
             //设置颜色
             if (i == touchMode) {
-                item.setColor(Color.RED);
+                item.setColor(touchModeColor);
             } else {
-                item.setColor(Color.BLUE);
+                item.setColor(unTouchModeColor);
             }
 
             piePaint.setColor(item.getColor());
@@ -336,21 +413,18 @@ public class PieCharView extends View {
 
     /**
      * 响应点击事件
-     * @param event
      */
-    private void doOnSpecialTypeClick(MotionEvent event, Canvas canvas) {
+    private void doOnSpecialTypeClick() {
         Pie itemMode;
         for (int i = 0; i < mList.size(); i++) {
             itemMode = mList.get(i);
             //判断点击的坐标是否在环内
             if (itemMode.isTouch()) {
                 touchMode = i;
-                drawPie(canvas);
-                Toast.makeText(getContext(), itemMode.getContent(), Toast.LENGTH_SHORT).show(); //输出对应区域的Content
+                invalidate(); //请求重新draw
+//                Toast.makeText(getContext(), itemMode.getContent(), Toast.LENGTH_SHORT).show(); //输出对应区域的Content
+                Log.d(TAG, "点击了" + itemMode.getContent());
             }
-
-
-
         }
     }
 
@@ -380,12 +454,13 @@ public class PieCharView extends View {
      *
      * @param mList
      */
-    public void setCakeData(List<Pie> mList) {
+    public void setPieData(List<Pie> mList) {
         if (mList == null)
             return;
         this.mList.clear();
         this.mList = mList;
-        invalidate();
+        touchMode = 0;
+        invalidate(); //请求重新draw
     }
 
     /**
@@ -472,6 +547,67 @@ public class PieCharView extends View {
         offsetY = mOffsetY;
     }
 
+    /**
+     * 设置扇区文字颜色
+     * @param mTextOutColor
+     */
+    public void setTextOutColor(int mTextOutColor) {
+        textOutColor = mTextOutColor;
+    }
 
+    /**
+     * 设置中心文字颜色
+     * @param mTextInColor
+     */
+    public void setTextInColor(int mTextInColor) {
+        textInColor = mTextInColor;
+    }
 
+    /**
+     * 设置文本显示位置的半径，默认在圆环的中间
+     * @param mTextRadius
+     */
+    public void setTextRadius(float mTextRadius) {
+        textRadius = mTextRadius;
+    }
+
+    /**
+     * 设置未点击的扇形区域的颜色
+     * @param mUnTouchModeColor
+     */
+    public void setUnTouchModeColor(int mUnTouchModeColor) {
+        unTouchModeColor = mUnTouchModeColor;
+    }
+
+    /**
+     * 设置点击的扇形区域的颜色
+     * @param mTouchModeColor
+     */
+    public void setTouchModeColor(int mTouchModeColor) {
+        touchModeColor = mTouchModeColor;
+    }
+
+    /**
+     * 设置是否显示扇形区域之间的间隔线
+     * @param mShowIntervalLine
+     */
+    public void setShowIntervalLine(boolean mShowIntervalLine) {
+        isShowIntervalLine = mShowIntervalLine;
+    }
+
+    /**
+     * 设置间隔线颜色
+     * @param mLineColor
+     */
+    public void setLineColor(int mLineColor) {
+        lineColor = mLineColor;
+    }
+
+    /**
+     * 设置间隔线宽度
+     * @param mLineWidth
+     */
+    public void setLineWidth(int mLineWidth) {
+        lineWidth = mLineWidth;
+    }
 }

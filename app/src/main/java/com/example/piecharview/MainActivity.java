@@ -2,6 +2,7 @@ package com.example.piecharview;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -38,7 +39,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mList = new ArrayList<>();
         for (int i = 0; i < Constant.mModeOne.length; i++)
             mList.add(new Pie(MAX_PERCENT / Constant.mModeOne.length, Constant.mModeOne[i]));
-        pieView.setCakeData(mList);
+        pieView.setPieData(mList);
         pieView.setCenterText("驾驶模式");
     }
 
@@ -47,9 +48,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        pieView.setShowOutText(true);
 //        pieView.setShowInText(true);
 //        pieView.setTextInSize(20);
-        pieView.setTextOutSize(25);
+//        pieView.setTextOutSize(15);
 //        pieView.setStillRadius(10);
-        pieView.setRoundWidth(200);
+        pieView.setTextInColor(Color.RED);
+        pieView.setTextOutColor(Color.BLACK);
+        pieView.setRoundWidth(100);
         pieView.setOffsetX(100);
         pieView.setOffsetY(50);
 
@@ -76,25 +79,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mList = new ArrayList<>();
                 for (int i = 0; i < Constant.mModeOne.length; i++)
                     mList.add(new Pie(MAX_PERCENT / Constant.mModeOne.length, Constant.mModeOne[i]));
-                pieView.setCakeData(mList);
+                pieView.setPieData(mList);
                 break;
             case R.id.select_two:
                 mList = new ArrayList<>();
                 for (int i = 0; i < Constant.mModeTwo.length; i++)
                     mList.add(new Pie(MAX_PERCENT / Constant.mModeTwo.length, Constant.mModeTwo[i]));
-                pieView.setCakeData(mList);
+                pieView.setPieData(mList);
                 break;
             case R.id.select_three:
                 mList = new ArrayList<>();
                 for (int i = 0; i < Constant.mModeThree.length; i++)
                     mList.add(new Pie(MAX_PERCENT / Constant.mModeThree.length, Constant.mModeThree[i]));
-                pieView.setCakeData(mList);
+                pieView.setPieData(mList);
                 break;
             case R.id.select_four:
                 mList = new ArrayList<>();
                 for (int i = 0; i < Constant.mModeFour.length; i++)
                     mList.add(new Pie(MAX_PERCENT / Constant.mModeFour.length, Constant.mModeFour[i]));
-                pieView.setCakeData(mList);
+                pieView.setPieData(mList);
                 break;
             default:
                 break;

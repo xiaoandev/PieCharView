@@ -3,10 +3,14 @@
     <declare-styleable name="PieCharView">
         <attr name="stillRadius" format="dimension" />
         <attr name="roundWidth" format="dimension" />
-        <attr name="textOutColor" format="dimension" />
-        <attr name="textInColor" format="dimension" />
         <attr name="textInSize" format="dimension" />
         <attr name="textOutSize" format="dimension" />
+        <attr name="textOutColor" format="dimension" />
+        <attr name="textInColor" format="dimension" />
+        <attr name="lineColor" format="dimension" />
+        <attr name="unTouchMode" format="dimension" />
+        <attr name="touchMode" format="dimension" />
+        <attr name="lineWidth" format="dimension" />
     </declare-styleable>
 
 </resources>

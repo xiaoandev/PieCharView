@@ -8,7 +8,7 @@ package com.example.piecharview;
 public class Constant {
 
     public static String mModeOne[] = {
-        "SPORT\r\n运动", "NORMAL\r\n标准"
+            "NORMAL\r\n标准", "SPORT\r\n运动"
     };
 
     public static String mModeTwo[] = {
