@@ -74,7 +74,9 @@ public class PieCharView extends View {
      * 设置字体默认大小
      */
     private final static int DEFAULT_TEXT_SIZE = 15;
-
+    /**
+     * 设置点击区域的字体默认大小
+     */
     private final static int DEFAULT_TOUCH_TEXT_SIZE = 20;
     /**
      * 存储需要绘制的文字的位置信息
