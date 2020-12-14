@@ -50,12 +50,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        pieView.setTextInSize(20);
 //        pieView.setTextOutSize(15);
 //        pieView.setStillRadius(10);
-        pieView.setTextInColor(Color.RED);
-        pieView.setTextOutColor(Color.BLACK);
+//        pieView.setTextInColor(Color.RED);
+//        pieView.setTextOutColor(Color.BLACK);
         pieView.setRoundWidth(100);
         pieView.setOffsetX(100);
         pieView.setOffsetY(50);
-
     }
 
     private void intiView() {

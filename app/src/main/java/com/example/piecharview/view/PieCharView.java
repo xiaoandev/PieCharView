@@ -49,7 +49,11 @@ public class PieCharView extends View {
     /**
      * 设置字体默认颜色
      */
-    private final static int DEFAULT_TEXT_COLOR = Color.RED;
+    private final static int DEFAULT_TEXT_COLOR = Color.BLACK;
+    /**
+     * 设置点击区域的字体默认颜色
+     */
+    private final static int DEFAULT_TOUCH_TEXT_COLOR = Color.WHITE;
     /**
      * 设置扇形区域的默认颜色
      */
@@ -62,12 +66,16 @@ public class PieCharView extends View {
      * 设置默认间隔线颜色
      */
     private final static int DEFAULT_LINE_COLOR = Color.WHITE;
-
+    /**
+     * 设置默认的间隔线宽度
+     */
     private final static int DEFAULT_LINE_WIDTH = 2;
     /**
      * 设置字体默认大小
      */
     private final static int DEFAULT_TEXT_SIZE = 15;
+
+    private final static int DEFAULT_TOUCH_TEXT_SIZE = 20;
     /**
      * 存储需要绘制的文字的位置信息
      */
@@ -164,6 +172,14 @@ public class PieCharView extends View {
      * 间隔线宽度
      */
     private int lineWidth;
+    /**
+     * 点击区域的字体颜色
+     */
+    private int touchTextColor;
+    /**
+     * 点击区域的字体大小
+     */
+    private int touchTextSize;
 
     private Paint piePaint, linePaint;
     private RectF pieInRectF, pieOutRectF, pieInTouchRectF, pieOutTouchRectF;
@@ -200,6 +216,8 @@ public class PieCharView extends View {
             lineWidth = (int) typedArray.getDimension(R.styleable.PieCharView_lineWidth, DEFAULT_LINE_WIDTH);
             touchModeColor = (int) typedArray.getDimension(R.styleable.PieCharView_touchMode, DEFAULT_TOUCH_MODE_COLOR);
             unTouchModeColor = (int) typedArray.getDimension(R.styleable.PieCharView_unTouchMode, DEFAULT_MODE_COLOR);
+            touchTextColor = (int) typedArray.getDimension(R.styleable.PieCharView_touchTextColor, DEFAULT_TOUCH_TEXT_COLOR);
+            touchTextSize = (int) typedArray.getDimension(R.styleable.PieCharView_touchTextSize, DEFAULT_TOUCH_TEXT_SIZE);
             typedArray.recycle(); //回收TypedArray
         }
     }
@@ -271,6 +289,7 @@ public class PieCharView extends View {
                 downX = event.getX();
                 downY = event.getY();
                 break;
+            //松开
             case MotionEvent.ACTION_UP:
                 currentMode = 0;
                 for (Pie pie : mList) { //循环判断点击事件位置在哪个区域
@@ -342,8 +361,14 @@ public class PieCharView extends View {
                 String text = mList.get(i).getContent();
                 mTextPaint.setARGB(0xFF, 0, 0, 0);
                 mTextPaint.setAntiAlias(true);  //消除锯齿
-                mTextPaint.setTextSize(textOutSize);
-                mTextPaint.setColor(textOutColor);
+
+                if (i == touchMode) {
+                    mTextPaint.setTextSize(touchTextSize);
+                    mTextPaint.setColor(touchTextColor);
+                } else {
+                    mTextPaint.setTextSize(textOutSize);
+                    mTextPaint.setColor(textOutColor);
+                }
                 //使用StaticLayout处理文字换行
                 StaticLayout layout = new StaticLayout(text, mTextPaint, 300,
                         Layout.Alignment.ALIGN_NORMAL, 1.0F, 0.0F, true);
@@ -609,5 +634,21 @@ public class PieCharView extends View {
      */
     public void setLineWidth(int mLineWidth) {
         lineWidth = mLineWidth;
+    }
+
+    /**
+     * 设置点击区域的文字颜色
+     * @param mTouchTextColor
+     */
+    public void setTouchTextColor(int mTouchTextColor) {
+        touchTextColor = mTouchTextColor;
+    }
+
+    /**
+     * 设置点击区域的文字大小
+     * @param mTouchTextSize
+     */
+    public void setTouchTextSize(int mTouchTextSize) {
+        touchTextSize = mTouchTextSize;
     }
 }
